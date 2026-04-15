@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Triple CacheSim - Wasm Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
+        input[type=number] { font-family: monospace; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans">
+
+<nav class="bg-slate-900 text-white p-4 shadow-xl mb-8">
+    <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-black tracking-tighter italic">
+            TRIPLE <span class="text-indigo-400">CACHE SIMULATOR</span>
+        </h1>
+
+ <div class="hidden md:block px-4 py-1 border border-slate-200 rounded-full text-slate-200 font-mono text-xs tracking-widest font-bold bg-slate-800/30">
+        CS204
+    </div>
+
+
+        <div id="statusIndicator" class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full border border-red-500/50">
+            <i class="fas fa-circle-notch fa-spin mr-2"></i> Engine Loading...
+        </div>
+    </div>
+</nav>
+
+<main class="container mx-auto px-4 pb-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- SIDEBAR: CONFIGURATION -->
+        <div class="lg:col-span-4 space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Configuration</h2>
+                
+                <!-- File Selection -->
+                <div class="mb-6 p-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 hover:border-indigo-400 transition-colors">
+                    <label class="block text-xs font-bold text-slate-700 mb-2">TRACE FILE (.OUT)</label>
+                    <input type="file" id="fileInput" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"/>
+                </div>
+
+                <!-- Cache Levels Grid -->
+                <!-- Cache Levels Grid -->
+<div class="space-y-4">
+    <!-- L1 -->
+    <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] font-black text-indigo-600 uppercase">L1 Cache</span>
+            <span class="text-[8px] text-indigo-400 font-bold uppercase">Size(B) | Block(B) | Way | Cyc</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+            <input type="number" id="c1" value="1024" placeholder="Size" title="Cache Size in Bytes" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-indigo-400 outline-none">
+            <input type="number" id="b1" value="32" placeholder="Block" title="Block Size in Bytes" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-indigo-400 outline-none">
+            <input type="number" id="a1" value="4" placeholder="Way" title="Associativity (Ways)" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-indigo-400 outline-none">
+            <input type="number" id="l1" value="1" placeholder="Lat" title="Latency in Cycles" class="p-1 text-xs border border-indigo-300 rounded w-full bg-indigo-100 focus:ring-1 focus:ring-indigo-400 outline-none">
+        </div>
+    </div>
+
+    <!-- L2 -->
+    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] font-black text-slate-600 uppercase">L2 Cache</span>
+            <span class="text-[8px] text-slate-400 font-bold uppercase">Size(B) | Block(B) | Way | Cyc</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+            <input type="number" id="c2" value="0" placeholder="Size" title="Cache Size in Bytes" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-slate-400 outline-none">
+            <input type="number" id="b2" value="0" placeholder="Block" title="Block Size in Bytes" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-slate-400 outline-none">
+            <input type="number" id="a2" value="0" placeholder="Way" title="Associativity (Ways)" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-slate-400 outline-none">
+            <input type="number" id="l2" value="10" placeholder="Lat" title="Latency in Cycles" class="p-1 text-xs border rounded w-full bg-slate-100 focus:ring-1 focus:ring-slate-400 outline-none">
+        </div>
+    </div>
+
+    <!-- L3 -->
+    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] font-black text-slate-600 uppercase">L3 Cache</span>
+            <span class="text-[8px] text-slate-400 font-bold uppercase">Size(B) | Block(B) | Way | Cyc</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+            <input type="number" id="c3" value="0" placeholder="Size" title="Cache Size in Bytes" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-slate-400 outline-none">
+            <input type="number" id="b3" value="0" placeholder="Block" title="Block Size in Bytes" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-slate-400 outline-none">
+            <input type="number" id="a3" value="0" placeholder="Way" title="Associativity (Ways)" class="p-2 text-xs border rounded w-full focus:ring-1 focus:ring-slate-400 outline-none">
+            <input type="number" id="l3" value="40" placeholder="Lat" title="Latency in Cycles" class="p-1 text-xs border rounded w-full bg-slate-100 focus:ring-1 focus:ring-slate-400 outline-none">
+        </div>
+    </div>
+</div>
+
+
+
+                <div class="mt-4">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">Main Memory Latency (Cycles)</label>
+                    <input type="number" id="mem_lat" value="100" class="w-full mt-1 p-2 bg-slate-50 border rounded-lg text-xs">
+                </div>
+
+
+
+
+
+
+                <div class="mt-4">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Replacement Policy</label>
+                    <select id="policy" class="w-full mt-1 p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                        <option value="1">LRU (Least Recently Used)</option>
+                        <option value="0">FIFO (First-In-First-Out)</option>
+                    </select>
+                </div>
+
+                <button id="runBtn" disabled onclick="startSimulation()" class="w-full mt-6 bg-slate-300 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 cursor-not-allowed">
+                    <i id="btnIcon" class="fas fa-bolt"></i> <span id="btnText">Run Simulation</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN DASHBOARD -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Accesses</p>
+                    <p id="stat-total" class="text-3xl font-black text-slate-800 mt-2">-</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-emerald-500">
+                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Total Hit Rate</p>
+                    <p id="stat-hitrate" class="text-3xl font-black text-emerald-600 mt-2">-</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-rose-500">
+                    <p class="text-xs font-bold text-rose-600 uppercase tracking-widest">Total Miss Rate</p>
+                    <p id="stat-missrate" class="text-3xl font-black text-rose-600 mt-2">-</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border-b-4 border-indigo-500"><p class="text-[10px] font-bold text-indigo-600 uppercase">AMAT (Cycles)</p><p id="stat-amat" class="text-xl font-black">-</p></div>
+
+
+            <div class="bg-slate-900 rounded-2xl p-2 shadow-2xl">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-slate-800">
+                    <span class="text-[10px] font-mono text-slate-500">OUTPUT CONSOLE</span>
+                </div>
+                <pre id="output" class="p-6 text-indigo-400 font-mono text-sm h-80 overflow-y-auto custom-scrollbar italic">Ready...</pre>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    var Module = {
+        onRuntimeInitialized: function() {
+            const btn = document.getElementById('runBtn');
+            const status = document.getElementById('statusIndicator');
+            btn.disabled = false;
+            btn.classList.replace('bg-slate-300', 'bg-indigo-600');
+            btn.classList.replace('cursor-not-allowed', 'hover:bg-indigo-700');
+            status.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Engine Ready';
+            status.className = "text-xs bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/50";
+        }
+    };
+
+    function startSimulation() {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length === 0) return alert("Select a trace file!");
+
+        const reader = new FileReader();
+        document.getElementById('output').innerText = "Processing...";
+
+        reader.onload = function(e) {
+            const traceData = e.target.result;
+            
+            // Getting all 11 values for  c++ function
+
+            const c1 = parseInt(document.getElementById('c1').value);
+            const c2 = parseInt(document.getElementById('c2').value);
+            const c3 = parseInt(document.getElementById('c3').value);
+            const b1 = parseInt(document.getElementById('b1').value);
+            const b2 = parseInt(document.getElementById('b2').value);
+            const b3 = parseInt(document.getElementById('b3').value);
+            const a1 = parseInt(document.getElementById('a1').value);
+            const a2 = parseInt(document.getElementById('a2').value);
+            const a3 = parseInt(document.getElementById('a3').value);
+            const l1 = parseInt(document.getElementById('l1').value);
+            const l2 = parseInt(document.getElementById('l2').value);
+            const l3 = parseInt(document.getElementById('l3').value);
+            const mem_lat = parseInt(document.getElementById('mem_lat').value);
+            const policy = parseInt(document.getElementById('policy').value) === 1; // bool
+
+            try {
+                // Calling  function with 11 arguments
+                const result = Module.run_cache_sim(traceData, c1, c2, c3, b1, b2, b3, a1, a2, a3,l1,l2,l3,mem_lat, policy);
+                document.getElementById('output').innerText = result;
+                updateDashboard(result);
+            } catch (err) {
+                document.getElementById('output').innerText = "Simulation Error: " + err;
+            }
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+
+    function updateDashboard(rawText) {
+        const extract = (regex) => (rawText.match(regex) || [null, "-"])[1];
+        document.getElementById('stat-total').innerText = extract(/Total Accesses: (\d+)/);
+        document.getElementById('stat-hitrate').innerText = extract(/Hit Rate: ([\d.]+%)/);
+        document.getElementById('stat-missrate').innerText = extract(/Miss Rate: ([\d.]+%)/);
+        document.getElementById('stat-amat').innerText = extract(/AMAT: ([\d.]+)/);
+    }
+</script>
+<script src="cache.js"></script>
+</body>
+</html>
