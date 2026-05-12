@@ -188,7 +188,12 @@
             const policy = parseInt(document.getElementById('policy').value) === 1; // bool
 
             try {
+
+
+
                 // Calling  function with 11 arguments
+
+
                 const result = Module.run_cache_sim(traceData, c1, c2, c3, b1, b2, b3, a1, a2, a3,l1,l2,l3,mem_lat, policy);
                 document.getElementById('output').innerText = result;
                 updateDashboard(result);
