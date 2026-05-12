@@ -13,6 +13,7 @@ struct Block {
     bool valid;
     uint64_t tag;
     int lastused;
+    bool dirty;
 };
 
 // we are defining helper functions since we are using them again and again 
@@ -21,7 +22,7 @@ struct Block {
 // hit case function 
 
 
-void hit_c(vector<vector<Block>>& cache,int assoc,uint64_t index,uint64_t tag,int timer,int* hit,int* hit1,bool* h,int fifo_or_lru)
+void hit_c(vector<vector<Block>>& cache,int assoc,uint64_t index,uint64_t tag,int timer,int* hit,int* hit1,bool* h,int fifo_or_lru,bool writeins)
 {
     if(cache.empty())
     {
@@ -36,6 +37,12 @@ void hit_c(vector<vector<Block>>& cache,int assoc,uint64_t index,uint64_t tag,in
                 (*h)=true;
                 if(fifo_or_lru!=0)                 // 0 for fifo and 1 for lru
                 cache[index][i].lastused= timer;
+
+                if(writeins)
+                {
+                cache[index][i].dirty= true;
+                }
+
                 break;
             }
         }
@@ -45,7 +52,7 @@ void hit_c(vector<vector<Block>>& cache,int assoc,uint64_t index,uint64_t tag,in
 // miss case function
 
 
-void miss_c(vector<vector<Block>>& cache,int assoc,uint64_t index,uint64_t tag,int timer)
+void miss_c(vector<vector<Block>>& cache,int assoc,uint64_t index,uint64_t tag,int timer,bool writeins,int* memory_writes)
 {
     if(cache.empty())
     {
@@ -60,6 +67,10 @@ void miss_c(vector<vector<Block>>& cache,int assoc,uint64_t index,uint64_t tag,i
                 cache[index][i].valid=1;
                 cache[index][i].tag=tag;
                 cache[index][i].lastused=timer;
+                if(writeins)
+                {
+                cache[index][i].dirty=true;
+                }
                 break;
             }
         }
@@ -74,8 +85,13 @@ void miss_c(vector<vector<Block>>& cache,int assoc,uint64_t index,uint64_t tag,i
                 lru=i;
             }
         }
+            if(cache[index][lru].dirty)
+            {
+                (*memory_writes)++;
+            }
             cache[index][lru].tag=tag;
             cache[index][lru].lastused= timer;
+            cache[index][lru].dirty = writeins;
         }
 
 }
@@ -137,6 +153,7 @@ string run_cache_sim(const string& trace_data, int cache_size1,int cache_size2,i
             cache1[i][j].valid=false;
             cache1[i][j].tag=0;
             cache1[i][j].lastused = -1;
+            cache1[i][j].dirty = 0;
         }
     }
 
@@ -147,6 +164,7 @@ string run_cache_sim(const string& trace_data, int cache_size1,int cache_size2,i
             cache2[i][j].valid=false;
             cache2[i][j].tag=0;
             cache2[i][j].lastused = -1;
+            cache2[i][j].dirty = 0;
         }
     }
 
@@ -157,6 +175,7 @@ string run_cache_sim(const string& trace_data, int cache_size1,int cache_size2,i
             cache3[i][j].valid=false;
             cache3[i][j].tag=0;
             cache3[i][j].lastused = -1;
+            cache3[i][j].dirty = 0;
         }
     }
 
@@ -199,7 +218,7 @@ num_offset_bits3++;
     int hit2 = 0;          // we get hit in cache 2
     int hit3 = 0;          // we get hit in cache 3
     double amat=0;         // average memory access time
-
+    int memory_writes=0;
 
 
     while (getline(infile, line)) 
@@ -258,9 +277,13 @@ num_offset_bits3++;
         // tags and indexes have been calculated ...now we will have a lookup 
 
 
-
+        bool writeins=false;
+        if(type=='W')
+        {
+            writeins=true;
+        }
         bool h=false;
-        hit_c(cache1,assoc1,index1,tag1,timer,&hit,&hit1,&h,fifo_or_lru);
+        hit_c(cache1,assoc1,index1,tag1,timer,&hit,&hit1,&h,fifo_or_lru,writeins);
 
 
         // hit function was called for l1 ...so if there was a hit h would have become true
@@ -270,7 +293,7 @@ num_offset_bits3++;
         {
 
             bool h1=false;
-            hit_c(cache2,assoc2,index2,tag2,timer,&hit,&hit2,&h1,fifo_or_lru);
+            hit_c(cache2,assoc2,index2,tag2,timer,&hit,&hit2,&h1,fifo_or_lru,writeins);
 
             // if still there is not a hit we will go to cache l3
 
@@ -278,31 +301,31 @@ num_offset_bits3++;
         {
 
                bool h2=false;
-               hit_c(cache3,assoc3,index3,tag3,timer,&hit,&hit3,&h2,fifo_or_lru);
+               hit_c(cache3,assoc3,index3,tag3,timer,&hit,&hit3,&h2,fifo_or_lru,writeins);
 
                // if there is not a hit in l3 also ... we will bring it to all three cache
         
            if(h2==false)
            {
                miss++;    
-         miss_c(cache1,assoc1,index1,tag1,timer);
-         miss_c(cache2,assoc2,index2,tag2,timer);
-         miss_c(cache3,assoc3,index3,tag3,timer);
+         miss_c(cache1,assoc1,index1,tag1,timer,writeins,&memory_writes);
+         miss_c(cache2,assoc2,index2,tag2,timer,writeins,&memory_writes);
+         miss_c(cache3,assoc3,index3,tag3,timer,writeins,&memory_writes);
          // after a miss what needs to be done has been done for all three cache 
          // since there was a miss in all three  
            }
            else
            {
 
-            miss_c(cache1,assoc1,index1,tag1,timer);
-            miss_c(cache2,assoc2,index2,tag2,timer);
+            miss_c(cache1,assoc1,index1,tag1,timer,writeins,&memory_writes);
+            miss_c(cache2,assoc2,index2,tag2,timer,writeins,&memory_writes);
 
             // this is the case when we got a hit in l3...so we are calling miss fun for l1 and l2
            }
         }
         else
         {
-            miss_c(cache1,assoc1,index1,tag1,timer);
+            miss_c(cache1,assoc1,index1,tag1,timer,writeins,&memory_writes);
             // this is the case whe we got a hit a l2...so we are calling miss fun for l1
         }
         }
@@ -356,6 +379,7 @@ num_offset_bits3++;
     res << "Hit Rate: " << fixed << setprecision(2) << ((double)hit / total) * 100 << "%\n";
     res << "Miss Rate: " << fixed << setprecision(2) << ((double)miss / total) * 100 << "%\n";
     res << "AMAT: " << amat<< "\n";
+    res << "Write_back writes: " << memory_writes << "\n";
     return res.str();
 }
 
