@@ -105,19 +105,33 @@ string run_cache_sim(const string& trace_data, int cache_size1,int cache_size2,i
     if (trace_data.empty()) return "Error: File is empty.";
 
     
-    if (cache_size1 <= 0 || block_size1 <= 0 || assoc1 <= 0) return "Error: Invalid parameters.";
+    if (cache_size1 <= 0 || block_size1 <= 0 || assoc1 <= 0) 
+    {
+    return "Error: Invalid parameters.";
+    }
+
     if (cache_size1 % (block_size1 * assoc1) != 0) {
-        return "Invalid config: Cache size must be divisible by (block_size * assoc).";
+        return "Invalid config.";
     }
 
-    if (cache_size2 < 0 || block_size2 < 0 || assoc2 < 0) return "Error: Invalid parameters.";
-    if (cache_size2 >0 && cache_size2 % (block_size2 * assoc2) != 0) {
-        return "Invalid config: Cache size must be divisible by (block_size * assoc).";
+    if (cache_size2 < 0 || block_size2 < 0 || assoc2 < 0)
+    {
+     return "Error: Invalid parameters.";
     }
 
-    if (cache_size3 < 0 || block_size3 < 0 || assoc3 < 0) return "Error: Invalid parameters.";
-    if (cache_size3 >0 && cache_size3 % (block_size3 * assoc3) != 0) {
-        return "Invalid config: Cache size must be divisible by (block_size * assoc).";
+    if (cache_size2 >0 && cache_size2 % (block_size2 * assoc2) != 0) 
+    {
+        return "Invalid config.";
+    }
+
+    if (cache_size3 < 0 || block_size3 < 0 || assoc3 < 0) 
+    {
+    return "Error: Invalid parameters.";
+    }
+
+    if (cache_size3 >0 && cache_size3 % (block_size3 * assoc3) != 0) 
+    {
+        return "Invalid config.";
     }
     
     
